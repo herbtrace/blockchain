@@ -51,7 +51,34 @@ type CollectionEvent struct {
 	HarvestDate time.Time               `json:"harvest_date"`
 	Environment EnvironmentalConditions `json:"environment,omitempty"`
 	Inputs      FarmingInputs           `json:"inputs,omitempty"`
-	Permits     []PermitCompliance      `json:"permits,omitempty"`
+	Permits     []string                `json:"permits,omitempty"` // Simplified as string array
+}
+
+// CreateBlockchainEvent stores a new collection event from JSON payload only
+func (s *SmartContract) CreateBlockchainEvent(ctx contractapi.TransactionContextInterface, eventJSON string) error {
+	// Parse JSON to get the batch ID
+	var event CollectionEvent
+	err := json.Unmarshal([]byte(eventJSON), &event)
+	if err != nil {
+		return fmt.Errorf("failed to unmarshal event JSON: %v", err)
+	}
+
+	// Check if event already exists
+	exists, err := s.EventExists(ctx, event.BatchID)
+	if err != nil {
+		return err
+	}
+	if exists {
+		return fmt.Errorf("collection event with batchID %s already exists", event.BatchID)
+	}
+
+	// Store the event
+	bytes, err := json.Marshal(event)
+	if err != nil {
+		return err
+	}
+
+	return ctx.GetStub().PutState(event.BatchID, bytes)
 }
 
 // CreateCollectionEvent stores a new collection event on the ledger
@@ -138,4 +165,29 @@ func (s *SmartContract) GetAllBlockchainEvents(ctx contractapi.TransactionContex
 	}
 
 	return events, nil
+}
+
+// TestConnection returns a simple message to verify chaincode is working
+func (s *SmartContract) TestConnection(ctx contractapi.TransactionContextInterface) (string, error) {
+	return "Chaincode is working! Connection successful.", nil
+}
+
+// GetEventCount returns the total number of events stored on the blockchain
+func (s *SmartContract) GetEventCount(ctx contractapi.TransactionContextInterface) (int, error) {
+	resultsIterator, err := ctx.GetStub().GetStateByRange("", "")
+	if err != nil {
+		return 0, fmt.Errorf("failed to get state from blockchain: %v", err)
+	}
+	defer resultsIterator.Close()
+
+	count := 0
+	for resultsIterator.HasNext() {
+		_, err := resultsIterator.Next()
+		if err != nil {
+			return 0, fmt.Errorf("error iterating through blockchain data: %v", err)
+		}
+		count++
+	}
+
+	return count, nil
 }
