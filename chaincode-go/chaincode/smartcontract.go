@@ -3,192 +3,139 @@ package chaincode
 import (
 	"encoding/json"
 	"fmt"
+	"time"
 
 	"github.com/hyperledger/fabric-contract-api-go/v2/contractapi"
 )
 
-// SmartContract provides functions for managing an Asset
+// SmartContract provides functions for managing farming events
 type SmartContract struct {
 	contractapi.Contract
 }
 
-// Asset describes basic details of what makes up a simple asset
-// Insert struct field in alphabetic order => to achieve determinism across languages
-// golang keeps the order when marshal to json but doesn't order automatically
-type Asset struct {
-	AppraisedValue int    `json:"AppraisedValue"`
-	Color          string `json:"Color"`
-	ID             string `json:"ID"`
-	Owner          string `json:"Owner"`
-	Size           int    `json:"Size"`
+// Domain structs
+type LatLong struct {
+	Lat     float64 `json:"lat"`
+	Long    float64 `json:"long"`
+	Address *string `json:"address,omitempty"`
 }
 
-// InitLedger adds a base set of assets to the ledger
-func (s *SmartContract) InitLedger(ctx contractapi.TransactionContextInterface) error {
-	assets := []Asset{
-		{ID: "asset1", Color: "blue", Size: 5, Owner: "Tomoko", AppraisedValue: 300},
-		{ID: "asset2", Color: "red", Size: 5, Owner: "Brad", AppraisedValue: 400},
-		{ID: "asset3", Color: "green", Size: 10, Owner: "Jin Soo", AppraisedValue: 500},
-		{ID: "asset4", Color: "yellow", Size: 10, Owner: "Max", AppraisedValue: 600},
-		{ID: "asset5", Color: "black", Size: 15, Owner: "Adriana", AppraisedValue: 700},
-		{ID: "asset6", Color: "white", Size: 15, Owner: "Michel", AppraisedValue: 800},
-	}
-
-	for _, asset := range assets {
-		assetJSON, err := json.Marshal(asset)
-		if err != nil {
-			return err
-		}
-
-		err = ctx.GetStub().PutState(asset.ID, assetJSON)
-		if err != nil {
-			return fmt.Errorf("failed to put to world state. %v", err)
-		}
-	}
-
-	return nil
+type EnvironmentalConditions struct {
+	SoilQuality       *string  `json:"soil_quality,omitempty"`
+	Moisture          *float64 `json:"moisture,omitempty"`
+	Temperature       *float64 `json:"temperature,omitempty"`
+	Humidity          *float64 `json:"humidity,omitempty"`
+	WeatherConditions *string  `json:"weather_conditions,omitempty"`
+	IrrigationMethod  *string  `json:"irrigation_method,omitempty"`
 }
 
-// CreateAsset issues a new asset to the world state with given details.
-func (s *SmartContract) CreateAsset(ctx contractapi.TransactionContextInterface, id string, color string, size int, owner string, appraisedValue int) error {
-	exists, err := s.AssetExists(ctx, id)
+type FarmingInputs struct {
+	Fertilizers      *string `json:"fertilizers,omitempty"`
+	PesticidesUsed   *string `json:"pesticides_used,omitempty"`
+	OrganicCertified bool    `json:"organic_certified"`
+}
+
+type PermitCompliance struct {
+	PermitID   string     `json:"permit_id"`
+	PermitType string     `json:"permit_type"`
+	Issuer     string     `json:"issuer"`
+	ValidUntil *time.Time `json:"valid_until,omitempty"`
+}
+
+type CollectionEvent struct {
+	BatchID     string                   `json:"batch_id"`
+	ActorID     string                   `json:"actor_id"`
+	CropID      string                   `json:"crop_id"`
+	Location    LatLong                  `json:"location"`
+	StartDate   time.Time                `json:"start_date"`
+	HarvestDate time.Time                `json:"harvest_date"`
+	Environment *EnvironmentalConditions `json:"environment,omitempty"`
+	Inputs      *FarmingInputs           `json:"inputs,omitempty"`
+	Permits     []PermitCompliance       `json:"permits,omitempty"`
+}
+
+// CreateCollectionEvent stores a new collection event on the ledger
+func (s *SmartContract) CreateCollectionEvent(ctx contractapi.TransactionContextInterface, batchID string, eventJSON string) error {
+	exists, err := s.EventExists(ctx, batchID)
 	if err != nil {
 		return err
 	}
 	if exists {
-		return fmt.Errorf("the asset %s already exists", id)
+		return fmt.Errorf("collection event with batchID %s already exists", batchID)
 	}
 
-	asset := Asset{
-		ID:             id,
-		Color:          color,
-		Size:           size,
-		Owner:          owner,
-		AppraisedValue: appraisedValue,
+	// Frontend will send JSON payload, we just validate + save
+	var event CollectionEvent
+	err = json.Unmarshal([]byte(eventJSON), &event)
+	if err != nil {
+		return fmt.Errorf("failed to unmarshal event JSON: %v", err)
 	}
-	assetJSON, err := json.Marshal(asset)
+
+	// Ensure the key matches the event batchID
+	if event.BatchID != batchID {
+		return fmt.Errorf("batchID mismatch between arg and JSON payload")
+	}
+
+	bytes, err := json.Marshal(event)
 	if err != nil {
 		return err
 	}
 
-	return ctx.GetStub().PutState(id, assetJSON)
+	return ctx.GetStub().PutState(batchID, bytes)
 }
 
-// ReadAsset returns the asset stored in the world state with given id.
-func (s *SmartContract) ReadAsset(ctx contractapi.TransactionContextInterface, id string) (*Asset, error) {
-	assetJSON, err := ctx.GetStub().GetState(id)
+// ReadCollectionEvent retrieves a collection event by batchID
+func (s *SmartContract) ReadCollectionEvent(ctx contractapi.TransactionContextInterface, batchID string) (*CollectionEvent, error) {
+	eventJSON, err := ctx.GetStub().GetState(batchID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read from world state: %v", err)
 	}
-	if assetJSON == nil {
-		return nil, fmt.Errorf("the asset %s does not exist", id)
+	if eventJSON == nil {
+		return nil, fmt.Errorf("collection event %s does not exist", batchID)
 	}
 
-	var asset Asset
-	err = json.Unmarshal(assetJSON, &asset)
+	var event CollectionEvent
+	err = json.Unmarshal(eventJSON, &event)
 	if err != nil {
 		return nil, err
 	}
-
-	return &asset, nil
+	return &event, nil
 }
 
-// UpdateAsset updates an existing asset in the world state with provided parameters.
-func (s *SmartContract) UpdateAsset(ctx contractapi.TransactionContextInterface, id string, color string, size int, owner string, appraisedValue int) error {
-	exists, err := s.AssetExists(ctx, id)
+// EventExists checks if a collection event exists by batchID
+func (s *SmartContract) EventExists(ctx contractapi.TransactionContextInterface, batchID string) (bool, error) {
+	data, err := ctx.GetStub().GetState(batchID)
 	if err != nil {
-		return err
+		return false, fmt.Errorf("failed to read world state: %v", err)
 	}
-	if !exists {
-		return fmt.Errorf("the asset %s does not exist", id)
-	}
-
-	// overwriting original asset with new asset
-	asset := Asset{
-		ID:             id,
-		Color:          color,
-		Size:           size,
-		Owner:          owner,
-		AppraisedValue: appraisedValue,
-	}
-	assetJSON, err := json.Marshal(asset)
-	if err != nil {
-		return err
-	}
-
-	return ctx.GetStub().PutState(id, assetJSON)
+	return data != nil, nil
 }
 
-// DeleteAsset deletes an given asset from the world state.
-func (s *SmartContract) DeleteAsset(ctx contractapi.TransactionContextInterface, id string) error {
-	exists, err := s.AssetExists(ctx, id)
-	if err != nil {
-		return err
-	}
-	if !exists {
-		return fmt.Errorf("the asset %s does not exist", id)
-	}
-
-	return ctx.GetStub().DelState(id)
-}
-
-// AssetExists returns true when asset with given ID exists in world state
-func (s *SmartContract) AssetExists(ctx contractapi.TransactionContextInterface, id string) (bool, error) {
-	assetJSON, err := ctx.GetStub().GetState(id)
-	if err != nil {
-		return false, fmt.Errorf("failed to read from world state: %v", err)
-	}
-
-	return assetJSON != nil, nil
-}
-
-// TransferAsset updates the owner field of asset with given id in world state, and returns the old owner.
-func (s *SmartContract) TransferAsset(ctx contractapi.TransactionContextInterface, id string, newOwner string) (string, error) {
-	asset, err := s.ReadAsset(ctx, id)
-	if err != nil {
-		return "", err
-	}
-
-	oldOwner := asset.Owner
-	asset.Owner = newOwner
-
-	assetJSON, err := json.Marshal(asset)
-	if err != nil {
-		return "", err
-	}
-
-	err = ctx.GetStub().PutState(id, assetJSON)
-	if err != nil {
-		return "", err
-	}
-
-	return oldOwner, nil
-}
-
-// GetAllAssets returns all assets found in world state
-func (s *SmartContract) GetAllAssets(ctx contractapi.TransactionContextInterface) ([]*Asset, error) {
-	// range query with empty string for startKey and endKey does an
-	// open-ended query of all assets in the chaincode namespace.
+// GetAllBlockchainEvents returns all events stored on the blockchain
+// This data is immutable and represents the complete state of all farming events
+func (s *SmartContract) GetAllBlockchainEvents(ctx contractapi.TransactionContextInterface) ([]*CollectionEvent, error) {
+	// Get all data from the blockchain ledger
 	resultsIterator, err := ctx.GetStub().GetStateByRange("", "")
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to get state from blockchain: %v", err)
 	}
 	defer resultsIterator.Close()
 
-	var assets []*Asset
+	var events []*CollectionEvent
 	for resultsIterator.HasNext() {
 		queryResponse, err := resultsIterator.Next()
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("error iterating through blockchain data: %v", err)
 		}
 
-		var asset Asset
-		err = json.Unmarshal(queryResponse.Value, &asset)
+		var event CollectionEvent
+		err = json.Unmarshal(queryResponse.Value, &event)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to unmarshal event data: %v", err)
 		}
-		assets = append(assets, &asset)
+
+		events = append(events, &event)
 	}
 
-	return assets, nil
+	return events, nil
 }
