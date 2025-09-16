@@ -17,41 +17,41 @@ type SmartContract struct {
 type LatLong struct {
 	Lat     float64 `json:"lat"`
 	Long    float64 `json:"long"`
-	Address *string `json:"address,omitempty"`
+	Address string  `json:"address,omitempty"`
 }
 
 type EnvironmentalConditions struct {
-	SoilQuality       *string  `json:"soil_quality,omitempty"`
-	Moisture          *float64 `json:"moisture,omitempty"`
-	Temperature       *float64 `json:"temperature,omitempty"`
-	Humidity          *float64 `json:"humidity,omitempty"`
-	WeatherConditions *string  `json:"weather_conditions,omitempty"`
-	IrrigationMethod  *string  `json:"irrigation_method,omitempty"`
+	SoilQuality       string  `json:"soil_quality,omitempty"`
+	Moisture          float64 `json:"moisture,omitempty"`
+	Temperature       float64 `json:"temperature,omitempty"`
+	Humidity          float64 `json:"humidity,omitempty"`
+	WeatherConditions string  `json:"weather_conditions,omitempty"`
+	IrrigationMethod  string  `json:"irrigation_method,omitempty"`
 }
 
 type FarmingInputs struct {
-	Fertilizers      *string `json:"fertilizers,omitempty"`
-	PesticidesUsed   *string `json:"pesticides_used,omitempty"`
-	OrganicCertified bool    `json:"organic_certified"`
+	Fertilizers      string `json:"fertilizers,omitempty"`
+	PesticidesUsed   string `json:"pesticides_used,omitempty"`
+	OrganicCertified bool   `json:"organic_certified"`
 }
 
 type PermitCompliance struct {
-	PermitID   string     `json:"permit_id"`
-	PermitType string     `json:"permit_type"`
-	Issuer     string     `json:"issuer"`
-	ValidUntil *time.Time `json:"valid_until,omitempty"`
+	PermitID   string `json:"permit_id"`
+	PermitType string `json:"permit_type"`
+	Issuer     string `json:"issuer"`
+	ValidUntil string `json:"valid_until,omitempty"` // Using string instead of *time.Time
 }
 
 type CollectionEvent struct {
-	BatchID     string                   `json:"batch_id"`
-	ActorID     string                   `json:"actor_id"`
-	CropID      string                   `json:"crop_id"`
-	Location    LatLong                  `json:"location"`
-	StartDate   time.Time                `json:"start_date"`
-	HarvestDate time.Time                `json:"harvest_date"`
-	Environment *EnvironmentalConditions `json:"environment,omitempty"`
-	Inputs      *FarmingInputs           `json:"inputs,omitempty"`
-	Permits     []PermitCompliance       `json:"permits,omitempty"`
+	BatchID     string                  `json:"batch_id"`
+	ActorID     string                  `json:"actor_id"`
+	CropID      string                  `json:"crop_id"`
+	Location    LatLong                 `json:"location"`
+	StartDate   time.Time               `json:"start_date"`
+	HarvestDate time.Time               `json:"harvest_date"`
+	Environment EnvironmentalConditions `json:"environment,omitempty"`
+	Inputs      FarmingInputs           `json:"inputs,omitempty"`
+	Permits     []PermitCompliance      `json:"permits,omitempty"`
 }
 
 // CreateCollectionEvent stores a new collection event on the ledger
@@ -85,21 +85,21 @@ func (s *SmartContract) CreateCollectionEvent(ctx contractapi.TransactionContext
 }
 
 // ReadCollectionEvent retrieves a collection event by batchID
-func (s *SmartContract) ReadCollectionEvent(ctx contractapi.TransactionContextInterface, batchID string) (*CollectionEvent, error) {
+func (s *SmartContract) ReadCollectionEvent(ctx contractapi.TransactionContextInterface, batchID string) (CollectionEvent, error) {
 	eventJSON, err := ctx.GetStub().GetState(batchID)
 	if err != nil {
-		return nil, fmt.Errorf("failed to read from world state: %v", err)
+		return CollectionEvent{}, fmt.Errorf("failed to read from world state: %v", err)
 	}
 	if eventJSON == nil {
-		return nil, fmt.Errorf("collection event %s does not exist", batchID)
+		return CollectionEvent{}, fmt.Errorf("collection event %s does not exist", batchID)
 	}
 
 	var event CollectionEvent
 	err = json.Unmarshal(eventJSON, &event)
 	if err != nil {
-		return nil, err
+		return CollectionEvent{}, err
 	}
-	return &event, nil
+	return event, nil
 }
 
 // EventExists checks if a collection event exists by batchID
@@ -113,7 +113,7 @@ func (s *SmartContract) EventExists(ctx contractapi.TransactionContextInterface,
 
 // GetAllBlockchainEvents returns all events stored on the blockchain
 // This data is immutable and represents the complete state of all farming events
-func (s *SmartContract) GetAllBlockchainEvents(ctx contractapi.TransactionContextInterface) ([]*CollectionEvent, error) {
+func (s *SmartContract) GetAllBlockchainEvents(ctx contractapi.TransactionContextInterface) ([]CollectionEvent, error) {
 	// Get all data from the blockchain ledger
 	resultsIterator, err := ctx.GetStub().GetStateByRange("", "")
 	if err != nil {
@@ -121,7 +121,7 @@ func (s *SmartContract) GetAllBlockchainEvents(ctx contractapi.TransactionContex
 	}
 	defer resultsIterator.Close()
 
-	var events []*CollectionEvent
+	var events []CollectionEvent
 	for resultsIterator.HasNext() {
 		queryResponse, err := resultsIterator.Next()
 		if err != nil {
@@ -134,7 +134,7 @@ func (s *SmartContract) GetAllBlockchainEvents(ctx contractapi.TransactionContex
 			return nil, fmt.Errorf("failed to unmarshal event data: %v", err)
 		}
 
-		events = append(events, &event)
+		events = append(events, event)
 	}
 
 	return events, nil
