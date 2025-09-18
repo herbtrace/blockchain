@@ -1,253 +1,259 @@
-Here's a significantly improved version of your README — more polished, structured, and professional, without any emojis, while keeping it clear and developer-friendly:
+# Agricultural Supply Chain Blockchain System
 
----
+![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)
+![Go Version](https://img.shields.io/badge/go-v1.17-blue.svg)
+![Hyperledger](https://img.shields.io/badge/hyperledger-2.4.x-green.svg)
 
-# Blockchain Supply Chain Tracking System
+A comprehensive **Hyperledger Fabric-based blockchain solution** for agricultural supply chain traceability, providing transparent and immutable tracking from farm to consumer.
 
-A comprehensive **Hyperledger Fabric-based blockchain solution** for end-to-end supply chain traceability in agriculture. This project enables transparent, secure, and immutable tracking of farming products from the field to final packaging.
-
----
+## 📖 Table of Contents
+- [Overview](#overview)
+- [Features](#features)
+- [Architecture](#architecture)
+- [Prerequisites](#prerequisites)
+- [Installation](#installation)
+- [Usage](#usage)
+- [API Reference](#api-reference)
+- [Testing](#testing)
+- [Security](#security)
+- [Contributing](#contributing)
+- [License](#license)
 
 ## Overview
 
-This project implements a **decentralized supply chain tracking system** using Hyperledger Fabric. It ensures transparency, security, and trust among stakeholders by recording every transaction and event immutably on the blockchain.
+This enterprise-grade blockchain solution implements end-to-end supply chain traceability using Hyperledger Fabric. The system tracks agricultural products through their entire journey, from harvest to consumer, ensuring:
 
-The system supports multiple organizations, provides unique QR code tracking for each product batch, and maintains a verifiable chain of custody from farmers to consumers.
+- **Transparency**: Complete visibility of product movement
+- **Immutability**: Tamper-proof record of all transactions
+- **Traceability**: Real-time tracking and history access
+- **Compliance**: Automated regulatory compliance checking
+- **Trust**: Multi-party verification at each step
 
----
+### Use Case Flow
 
-## Key Features
+1. 🌾 **Farmer** records harvest details
+2. 🚛 **Transporter** verifies and moves product
+3. 🏭 **Processor** validates and processes
+4. 📦 **Distributor** manages packaging
+5. 🏪 **Retailer** receives and sells
+6. 👤 **Consumer** verifies authenticity
 
-### Event Tracking
+## Features
 
-* Immutable recording of supply chain events
-* Timestamp and geolocation data capture
-* Environmental condition monitoring
-* Compliance and certification tracking
-* Multi-party verification and approval
+### Core Functionality
 
-### QR Code Integration
+- **Smart Contract Operations**
+  - Asset creation and management
+  - Ownership transfers
+  - Multi-party approvals
+  - Compliance verification
+  - History tracking
 
-* Unique QR code generation per event
-* Secure scanning and verification process
-* Complete history access through final QR
-* Mobile-friendly and web-compatible interface
+- **QR Code System**
+  - Dynamic QR generation
+  - Secure verification process
+  - History access through scanning
+  - Mobile-optimized interface
 
-### Blockchain Infrastructure
+- **User Management**
+  - Role-based access control
+  - Digital identity management
+  - Multi-signature support
+  - Organization management
 
-* Hyperledger Fabric network with multiple organizations
-* Smart contract automation (chaincode)
-* CouchDB as state database
-* Certificate Authority (CA)-based identity management
+### Technical Features
 
----
+- **Blockchain Network**
+  - Multi-organization support
+  - Chaincode lifecycle management
+  - Private data collections
+  - State database (CouchDB)
 
-## Technical Stack
+- **Security**
+  - TLS encryption
+  - CA-based authentication
+  - MSP-based authorization
+  - Audit logging
 
-**Backend**
+## Architecture
 
-* Hyperledger Fabric v2.4.x
-* Go v1.17.x (Chaincode)
-* Node.js v14.x (API server)
-* CouchDB (state database)
+### System Components
 
-**DevOps**
+```
+                                   ┌────────────┐
+                                   │  Orderer   │
+                                   └────────────┘
+                                         │
+                    ┌────────────────────┼────────────────────┐
+                    │                    │                    │
+              ┌──────────┐        ┌──────────┐        ┌──────────┐
+              │  Peer 1  │        │  Peer 2  │        │  Peer 3  │
+              └──────────┘        └──────────┘        └──────────┘
+                    │                    │                    │
+              ┌──────────┐        ┌──────────┐        ┌──────────┐
+              │ CouchDB 1│        │ CouchDB 2│        │ CouchDB 3│
+              └──────────┘        └──────────┘        └──────────┘
+```
 
-* Docker v20.10.x
-* Docker Compose v2.0.x
-* Shell and Python scripts for automation
-
----
-
-## System Architecture
-
-### Network Components
-
-1. **Organizations**
-
-   * Org1 – Farmers / Producers
-   * Org2 – Transporters / Distributors
-   * Org3 (Optional) – Retailers / Consumers
-
-2. **Smart Contracts**
-
-   * Asset Management
-   * Event Logging
-   * Access Control
-   * QR Code Generation
-
-3. **Core Services**
-
-   * Ordering Service
-   * Certificate Authorities
-   * Peer Nodes
-   * CouchDB Instances
-
----
-
-### Supply Chain Workflow
-
-1. **Initial Recording**
-
-   * Farmer logs harvest details: crop type, harvest date, geolocation, and conditions
-   * System generates an initial QR code
-   * Data is stored immutably on the blockchain
-
-2. **Transport Phase**
-
-   * Transporter scans product QR
-   * Handover details and transport conditions are recorded
-   * Blockchain state is updated
-
-3. **Processing & Storage**
-
-   * Quality checks and storage conditions are recorded
-   * Compliance certificates are attached
-   * Chain of custody is preserved
-
-4. **Final Packaging**
-
-   * Complete history is compiled
-   * Final consumer-facing QR code is generated
-   * Consumer can access full product journey
-
----
-
-## Project Structure
+### Directory Structure
 
 ```
 blockchain/
 ├── api/                    # REST API implementation
-│   ├── handlers/           # Request handlers
-│   ├── models/             # Data models
-│   └── main/               # API entry point
-├── chaincode-go/           # Smart contract implementation
-│   ├── chaincode/          # Core contract logic
-│   └── vendor/             # Dependencies
-└── test-network/           # Hyperledger Fabric network configuration
-    ├── organizations/      # Org certificates and keys
-    ├── scripts/            # Utility scripts
-    └── compose/            # Docker compositions
+├── chaincode-go/          # Smart contracts
+├── config/                # Network configuration
+├── test-network/         # Test network setup
+└── builders/             # Custom chaincode builders
 ```
 
----
+## Prerequisites
 
-## Setup and Installation
+### System Requirements
+- Linux-based OS (Ubuntu 20.04 LTS recommended)
+- 4GB RAM minimum
+- 20GB available storage
+- Docker v20.10.x or higher
+- Docker Compose v2.0.x or higher
 
-### Prerequisites
-
+### Required Software
 ```bash
-# Update package manager
+# System packages
 sudo apt-get update
+sudo apt-get install -y git curl wget jq
 
-# Install Docker
-sudo apt-get install docker-ce docker-ce-cli containerd.io
+# Docker installation
+curl -fsSL https://get.docker.com -o get-docker.sh
+sudo sh get-docker.sh
 
-# Install Go
+# Go installation
 wget https://go.dev/dl/go1.17.linux-amd64.tar.gz
 sudo tar -C /usr/local -xzf go1.17.linux-amd64.tar.gz
+echo "export PATH=$PATH:/usr/local/go/bin" >> ~/.bashrc
+source ~/.bashrc
 
-# Install Node.js
+# Node.js
 curl -fsSL https://deb.nodesource.com/setup_14.x | sudo -E bash -
 sudo apt-get install -y nodejs
 ```
 
-### Network Deployment
+## Installation
 
+1. **Clone Repository**
 ```bash
-# Start the Hyperledger Fabric test network
-cd test-network
-./network.sh up createChannel -ca
-
-# Deploy chaincode
-./network.sh deployCC -ccn supplychain -ccp ../chaincode-go -ccl go
-
-# Verify deployment
-docker ps
+git clone https://github.com/your-org/blockchain-supply-chain.git
+cd blockchain-supply-chain
 ```
 
-### API Server Setup
+2. **Network Setup**
+```bash
+cd test-network
+./network.sh up createChannel -c supplychannel -ca
+```
 
+3. **Deploy Chaincode**
+```bash
+./network.sh deployCC -ccn supplychain -ccp ../chaincode-go -ccl go
+```
+
+4. **Start API Server**
 ```bash
 cd ../api
 go mod tidy
-go run main/main.go
+go run main.go
 ```
 
----
+## Usage
 
-## API Endpoints
+### Basic Operations
 
-### Event Management
+1. **Create Product Entry**
+```bash
+curl -X POST http://localhost:3000/api/product/create \
+  -H "Content-Type: application/json" \
+  -d '{
+    "cropType": "Wheat",
+    "location": {"lat": 51.507351, "long": -0.127758},
+    "timestamp": "2023-09-18T10:00:00Z"
+  }'
+```
 
-* `POST /api/events/create` – Create a new supply chain event
-* `GET /api/events/{eventId}` – Retrieve details of a specific event
+2. **Track Product**
+```bash
+curl -X GET http://localhost:3000/api/product/{productId}/history
+```
 
 ### QR Code Operations
 
-* `POST /api/qr/generate` – Generate a new QR code linked to event data
-* `GET /api/qr/{qrId}/verify` – Verify the authenticity of a QR code
+1. **Generate QR**
+```bash
+curl -X POST http://localhost:3000/api/qr/generate/{productId}
+```
 
-### Product History
+2. **Verify QR**
+```bash
+curl -X GET http://localhost:3000/api/qr/{qrId}/verify
+```
 
-* `GET /api/product/{productId}/history` – Retrieve complete product history, including all events
+## API Reference
 
----
+### Product Management
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/product/create` | POST | Create new product |
+| `/api/product/{id}` | GET | Get product details |
+| `/api/product/{id}/history` | GET | Get product history |
+
+### Event Management
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/events/create` | POST | Record new event |
+| `/api/events/{id}` | GET | Get event details |
 
 ## Testing
 
 ```bash
-# Run chaincode tests
+# Run all tests
 cd chaincode-go
-go test ./chaincode/... -v
-
-# Run API tests
-cd ../api
 go test ./... -v
+
+# Run specific test suite
+go test ./chaincode/smartcontract_test.go -v
 ```
 
----
+## Security
 
-## Security Features
+### Network Security
+- TLS 1.3 encryption
+- Mutual TLS authentication
+- Private data collections
+- Channel-based isolation
 
-* **Authentication & Authorization**
-
-  * Certificate-based identity management
-  * Role-based access control
-  * Multi-signature transaction approvals
-
-* **Data Security**
-
-  * Encrypted data storage
-  * TLS-secured communication channels
-  * Immutable blockchain audit trail
-
----
-
-## Maintenance
-
-Regular maintenance tasks include:
-
-1. Network backups
-2. Certificate rotation
-3. Performance and resource monitoring
-4. Security patching and upgrades
-
----
+### Access Control
+- Role-based access (RBAC)
+- Organization-level MSP
+- Certificate-based identity
+- Policy-based endorsement
 
 ## Contributing
 
-1. Fork this repository
-2. Create a feature branch (`git checkout -b feature-name`)
-3. Commit your changes with clear messages
-4. Open a pull request for review
+1. Fork repository
+2. Create feature branch
+3. Commit changes
+4. Submit pull request
 
----
+### Coding Standards
+- Go: Follow [Go Code Review Comments](https://github.com/golang/go/wiki/CodeReviewComments)
+- JavaScript: Use ESLint with Airbnb config
+- Documentation: Update README and JSDoc
 
 ## License
 
-This project is licensed under the **Apache License 2.0** – see the [LICENSE](LICENSE) file for details.
+[Apache License 2.0](LICENSE)
 
 ---
 
-Would you like me to also add a **diagram or flowchart (architecture + supply chain flow)** to visually complement the README? That can make it easier for developers and stakeholders to understand the system quickly.
+## Support
+
+- 📧 Email: support@example.com
+- 💬 Discord: [Join Channel](https://discord.gg/example)
+- 📖 Documentation: [Wiki](https://github.com/your-org/wiki)
