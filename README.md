@@ -75,25 +75,7 @@ This enterprise-grade blockchain solution implements end-to-end supply chain tra
   - MSP-based authorization
   - Audit logging
 
-## Architecture
 
-### System Components
-
-```
-                                   ┌────────────┐
-                                   │  Orderer   │
-                                   └────────────┘
-                                         │
-                    ┌────────────────────┼────────────────────┐
-                    │                    │                    │
-              ┌──────────┐        ┌──────────┐        ┌──────────┐
-              │  Peer 1  │        │  Peer 2  │        │  Peer 3  │
-              └──────────┘        └──────────┘        └──────────┘
-                    │                    │                    │
-              ┌──────────┐        ┌──────────┐        ┌──────────┐
-              │ CouchDB 1│        │ CouchDB 2│        │ CouchDB 3│
-              └──────────┘        └──────────┘        └──────────┘
-```
 
 ### Directory Structure
 
@@ -241,19 +223,9 @@ go test ./chaincode/smartcontract_test.go -v
 3. Commit changes
 4. Submit pull request
 
-### Coding Standards
-- Go: Follow [Go Code Review Comments](https://github.com/golang/go/wiki/CodeReviewComments)
-- JavaScript: Use ESLint with Airbnb config
-- Documentation: Update README and JSDoc
 
 ## License
 
 [Apache License 2.0](LICENSE)
 
----
 
-## Support
-
-- 📧 Email: support@example.com
-- 💬 Discord: [Join Channel](https://discord.gg/example)
-- 📖 Documentation: [Wiki](https://github.com/your-org/wiki)
