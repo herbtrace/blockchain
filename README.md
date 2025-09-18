@@ -31,12 +31,12 @@ This enterprise-grade blockchain solution implements end-to-end supply chain tra
 
 ### Use Case Flow
 
-1. 🌾 **Farmer** records harvest details
-2. 🚛 **Transporter** verifies and moves product
-3. 🏭 **Processor** validates and processes
-4. 📦 **Distributor** manages packaging
-5. 🏪 **Retailer** receives and sells
-6. 👤 **Consumer** verifies authenticity
+1. **Farmer** records harvest details
+2. **Transporter** verifies and moves product
+3. **Processor** validates and processes
+4. **Distributor** manages packaging
+5. **Retailer** receives and sells
+6.**Consumer** verifies authenticity
 
 ## Features
 
@@ -122,7 +122,7 @@ sudo apt-get install -y nodejs
 
 1. **Clone Repository**
 ```bash
-git clone https://github.com/your-org/blockchain-supply-chain.git
+git clone https://github.com/herbtrace/blockchain-supply-chain.git
 cd blockchain-supply-chain
 ```
 
