@@ -36,7 +36,7 @@ This enterprise-grade blockchain solution implements end-to-end supply chain tra
 3. **Processor** validates and processes
 4. **Distributor** manages packaging
 5. **Retailer** receives and sells
-6.**Consumer** verifies authenticity
+6. **Consumer** verifies authenticity
 
 ## Features
 
